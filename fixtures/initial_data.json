@@ -4,15 +4,15 @@
         "model": "sites.site", 
         "fields": {
             "domain": "localhost:8000", 
-            "name": "example.com [localhost]"
+            "name": "VideoCargador [localhost]"
         }
     },
     {
         "pk": 2, 
         "model": "sites.site", 
         "fields": {
-            "domain": "example.com", 
-            "name": "example.com"
+            "domain": "videocargador.plexxoo.com", 
+            "name": "videocargador.plexxoo.com"
         }
     }
 ]
