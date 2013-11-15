@@ -15,8 +15,9 @@
 (function () {
     'use strict';
 
-    var isOnGitHub = window.location.hostname === 'blueimp.github.io',
-        url = isOnGitHub ? '//jquery-file-upload.appspot.com/' : 'server/php/';
+
+    var url = '/video/new/',
+        urlview = '/video/view/';
 
     angular.module('demo', [
         'blueimp.fileupload'
@@ -29,6 +30,7 @@
                     /\/[^\/]*$/,
                     '/cors/result.html?%s'
                 );
+
                 if (isOnGitHub) {
                     // Demo settings:
                     angular.extend(fileUploadProvider.defaults, {
@@ -52,7 +54,7 @@
                 };
                 if (!isOnGitHub) {
                     $scope.loadingFiles = true;
-                    $http.get(url)
+                    $http.get(urlview)
                         .then(
                             function (response) {
                                 $scope.loadingFiles = false;
@@ -79,7 +81,9 @@
                         state = 'pending';
                         return $http({
                             url: file.deleteUrl,
-                            method: file.deleteType
+                            method: file.deleteType,
+                            xsrfHeaderName: 'X-CSRFToken',
+                            xsrfCookieName: 'csrftoken'
                         }).then(
                             function () {
                                 state = 'resolved';

@@ -134,12 +134,10 @@ INSTALLED_APPS = [
     "account",
     "metron",
     "eventlog",
-    "jqueryfileupload",
     
     # project
     "videocargador",
     "video",
-    "fileupload",
 ]
 
 # A sample logging configuration. The only tangible logging

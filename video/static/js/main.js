@@ -1,5 +1,5 @@
 /*
- * jQuery File Upload Plugin JS Example 8.9.0
+ * jQuery File Upload Plugin JS Example 8.8.2
  * https://github.com/blueimp/jQuery-File-Upload
  *
  * Copyright 2010, Sebastian Tschan
@@ -19,7 +19,7 @@ $(function () {
     $('#fileupload').fileupload({
         // Uncomment the following to send cross-domain cookies:
         //xhrFields: {withCredentials: true},
-        url: 'server/php/'
+        url: '/video/new/'
     });
 
     // Enable iframe cross-domain access via redirect option:
@@ -62,14 +62,15 @@ $(function () {
         $.ajax({
             // Uncomment the following to send cross-domain cookies:
             //xhrFields: {withCredentials: true},
-            url: $('#fileupload').fileupload('option', 'url'),
+            //url: $('#fileupload').fileupload('option', 'url'),
+            url: '/video/view/',
             dataType: 'json',
             context: $('#fileupload')[0]
         }).always(function () {
             $(this).removeClass('fileupload-processing');
         }).done(function (result) {
             $(this).fileupload('option', 'done')
-                .call(this, $.Event('done'), {result: result});
+                .call(this, null, {result: result});
         });
     }
 

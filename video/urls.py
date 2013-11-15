@@ -1,8 +1,11 @@
-from django.conf.urls.defaults import patterns
-from views import *
+# encoding: utf-8
+from django.conf.urls import patterns, url
+from views import (
+        VideoCreateView, VideoDeleteView, VideoListView,
+        )
 
 urlpatterns = patterns('',
-    (r'^upload/$', UploadVideoView.as_view(), {}, 'video_update'),
-    (r'^delete/(?P<pk>\d+)/$', DeleteVideoView.as_view(), {}, 'video_delete'),
-    #(r'^view/$', VideoListView.as_view(), name='video-view'),
+    url(r'^new/$', VideoCreateView.as_view(), name='video-new'),
+    url(r'^delete/(?P<pk>\d+)$', VideoDeleteView.as_view(), name='video-delete'),
+    url(r'^view/$', VideoListView.as_view(), name='video-view'),
 )

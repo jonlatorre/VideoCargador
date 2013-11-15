@@ -1,5 +1,5 @@
 /*
- * jQuery File Upload Image Preview & Resize Plugin 1.6.0
+ * jQuery File Upload Image Preview & Resize Plugin 1.2.3
  * https://github.com/blueimp/jQuery-File-Upload
  *
  * Copyright 2013, Sebastian Tschan
@@ -64,14 +64,10 @@
             minWidth: '@',
             minHeight: '@',
             crop: '@',
-            orientation: '@',
-            forceResize: '@',
             disabled: '@disableImageResize'
         },
         {
             action: 'saveImage',
-            quality: '@imageQuality',
-            type: '@imageType',
             disabled: '@disableImageResize'
         },
         {
@@ -113,9 +109,6 @@
             imageMaxWidth: 1920,
             // The maximum height of resized images:
             imageMaxHeight: 1080,
-            // Defines the image orientation (1-8) or takes the orientation
-            // value from Exif data if set to true:
-            imageOrientation: false,
             // Define if resized images should be cropped or only scaled:
             imageCrop: false,
             // Disable the resize image functionality by default:
@@ -138,7 +131,7 @@
         processActions: {
 
             // Loads the image given via data.files and data.index
-            // as img element, if the browser supports the File API.
+            // as img element if the browser supports canvas.
             // Accepts the options fileTypes (regular expression)
             // and maxFileSize (integer) to limit the files to load:
             loadImage: function (data, options) {
@@ -169,27 +162,22 @@
 
             // Resizes the image given as data.canvas or data.img
             // and updates data.canvas or data.img with the resized image.
-            // Also stores the resized image as preview property.
             // Accepts the options maxWidth, maxHeight, minWidth,
             // minHeight, canvas and crop:
             resizeImage: function (data, options) {
-                if (options.disabled || !(data.canvas || data.img)) {
+                if (options.disabled) {
                     return data;
                 }
-                options = $.extend({canvas: true}, options);
                 var that = this,
                     dfd = $.Deferred(),
-                    img = (options.canvas && data.canvas) || data.img,
                     resolve = function (newImg) {
-                        if (newImg && (newImg.width !== img.width ||
-                                newImg.height !== img.height ||
-                                options.forceResize)) {
-                            data[newImg.getContext ? 'canvas' : 'img'] = newImg;
-                        }
-                        data.preview = newImg;
+                        data[newImg.getContext ? 'canvas' : 'img'] = newImg;
                         dfd.resolveWith(that, [data]);
                     },
-                    thumbnail;
+                    thumbnail,
+                    img,
+                    newImg;
+                options = $.extend({canvas: true}, options);
                 if (data.exif) {
                     if (options.orientation === true) {
                         options.orientation = data.exif.get('Orientation');
@@ -202,9 +190,14 @@
                         }
                     }
                 }
+                img = (options.canvas && data.canvas) || data.img;
                 if (img) {
-                    resolve(loadImage.scale(img, options));
-                    return dfd.promise();
+                    newImg = loadImage.scale(img, options);
+                    if (newImg.width !== img.width ||
+                            newImg.height !== img.height) {
+                        resolve(newImg);
+                        return dfd.promise();
+                    }
                 }
                 return data;
             },
@@ -217,32 +210,35 @@
                 }
                 var that = this,
                     file = data.files[data.index],
-                    dfd = $.Deferred();
-                if (data.canvas.toBlob) {
-                    data.canvas.toBlob(
-                        function (blob) {
-                            if (!blob.name) {
-                                if (file.type === blob.type) {
-                                    blob.name = file.name;
-                                } else if (file.name) {
-                                    blob.name = file.name.replace(
-                                        /\..+$/,
-                                        '.' + blob.type.substr(6)
-                                    );
-                                }
+                    name = file.name,
+                    dfd = $.Deferred(),
+                    callback = function (blob) {
+                        if (!blob.name) {
+                            if (file.type === blob.type) {
+                                blob.name = file.name;
+                            } else if (file.name) {
+                                blob.name = file.name.replace(
+                                    /\..+$/,
+                                    '.' + blob.type.substr(6)
+                                );
                             }
-                            // Don't restore invalid meta data:
-                            if (file.type !== blob.type) {
-                                delete data.imageHead;
-                            }
-                            // Store the created blob at the position
-                            // of the original file in the files list:
-                            data.files[data.index] = blob;
-                            dfd.resolveWith(that, [data]);
-                        },
-                        options.type || file.type,
-                        options.quality
-                    );
+                        }
+                        // Store the created blob at the position
+                        // of the original file in the files list:
+                        data.files[data.index] = blob;
+                        dfd.resolveWith(that, [data]);
+                    };
+                // Use canvas.mozGetAsFile directly, to retain the filename, as
+                // Gecko doesn't support the filename option for FormData.append:
+                if (data.canvas.mozGetAsFile) {
+                    callback(data.canvas.mozGetAsFile(
+                        (/^image\/(jpeg|png)$/.test(file.type) && name) ||
+                            ((name && name.replace(/\..+$/, '')) ||
+                                'blob') + '.png',
+                        file.type
+                    ));
+                } else if (data.canvas.toBlob) {
+                    data.canvas.toBlob(callback, file.type);
                 } else {
                     return data;
                 }
@@ -282,8 +278,9 @@
             // Sets the resized version of the image as a property of the
             // file object, must be called after "saveImage":
             setImage: function (data, options) {
-                if (data.preview && !options.disabled) {
-                    data.files[data.index][options.name || 'preview'] = data.preview;
+                var img = data.canvas || data.img;
+                if (img && !options.disabled) {
+                    data.files[data.index][options.name || 'preview'] = img;
                 }
                 return data;
             }
