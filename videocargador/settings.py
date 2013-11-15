@@ -134,9 +134,12 @@ INSTALLED_APPS = [
     "account",
     "metron",
     "eventlog",
+    "jqueryfileupload",
     
     # project
     "videocargador",
+    "video",
+    "fileupload",
 ]
 
 # A sample logging configuration. The only tangible logging
@@ -174,7 +177,7 @@ FIXTURE_DIRS = [
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-ACCOUNT_OPEN_SIGNUP = True
+ACCOUNT_OPEN_SIGNUP = False
 ACCOUNT_USE_OPENID = False
 ACCOUNT_REQUIRED_EMAIL = False
 ACCOUNT_EMAIL_VERIFICATION = False
