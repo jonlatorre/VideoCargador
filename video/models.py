@@ -1,5 +1,7 @@
 # encoding: utf-8
 from django.db import models
+import os
+from mencoder import *
 
 
 class Video(models.Model):
@@ -9,12 +11,14 @@ class Video(models.Model):
     problems installing pillow, use a more generic FileField instead.
 
     """
-    file = models.FileField(upload_to="videos")
+    file = models.FileField(upload_to="uploaded_videos")
     slug = models.SlugField(max_length=50, blank=True)
     mp4_encoded = models.BooleanField(default=False)
-    #mp4_url = models.BooleanField(default=False)
+    mp4_file = models.FileField(upload_to="converted_videos", blank=True)
+    mp4_url = models.BooleanField(default=False)
     flv_encoded = models.BooleanField(default=False)
-    #flv_url = models.BooleanField(default=False)
+    flv_file = models.FileField(upload_to="converted_videos", blank=True)
+    flv_url = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.file.name
@@ -31,3 +35,15 @@ class Video(models.Model):
         """delete -- Remove to leave file."""
         self.file.delete(False)
         super(Video, self).delete(*args, **kwargs)
+    def encode_mp4(self):
+        print "Vamos a convertir a mp4"
+        destino = self.mp4_file.storage.base_location
+        destino = os.path.join(destino,"converted_videos")
+        ret,salida = call_mencoder_mp4(self.file.path,destino)
+        if ret == 0:
+            print "Codificacion OK"
+            self.mp4_file.name = "converted_videos/"+salida
+            self.mp4_encoded = True
+            self.save()
+    def upload_mp4(self):
+        print "Subimos el MP4"
